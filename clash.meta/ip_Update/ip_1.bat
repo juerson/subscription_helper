@@ -1,11 +1,11 @@
 @Echo Off
 Title ip1云端更新 clash 最新配置
 cd /d %~dp0
-..\..\wget -t 2 --no-check-certificate https://www.gitlabip.xyz/Alvin9999/pac2/master/clash.meta2/1/config.yaml
+..\..\wget -t 2 --no-check-certificate https://www.gitlabip.xyz/Alvin9999/PAC/master/backup/img/1/2/ipp/clash.meta2/1/config.yaml
 
 if exist config.yaml goto startcopy
 
-..\..\wget  -t 2 --no-check-certificate  https://gitlab.com/free9999/ipupdate/-/raw/master/clash.meta2/config.yaml
+..\..\wget  -t 2 --no-check-certificate https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/clash.meta2/1/config.yaml
 
 if exist config.yaml goto startcopy
 

@@ -1,9 +1,10 @@
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
+use std::{
+    collections::{ HashMap, HashSet },
+    fs::{ self, File },
+    io::{ BufRead, BufReader },
+    path::{ Path, PathBuf },
+};
 
 fn main() {
     let all_url = get_urls();
@@ -21,10 +22,7 @@ fn get_urls() -> Vec<String> {
     for file in bat_files {
         if let Some(first_folder) = get_first_folder(&current_dir, &file) {
             let urls = extract_urls(&file).unwrap();
-            url_map
-                .entry(first_folder)
-                .or_insert_with(HashSet::new)
-                .extend(urls);
+            url_map.entry(first_folder).or_insert_with(HashSet::new).extend(urls);
         }
     }
     let mut all_url: Vec<String> = Vec::new();
@@ -69,7 +67,9 @@ fn extract_urls(file_path: &Path) -> std::io::Result<HashSet<String>> {
                     urls.insert(url.as_str().to_string());
                 }
             }
-            Err(_) => continue, // 跳过无法读取的行
+            Err(_) => {
+                continue;
+            } // 跳过无法读取的行
         }
     }
 

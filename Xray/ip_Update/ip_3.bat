@@ -1,12 +1,11 @@
 @Echo Off
 Title ip2云端更新 Xray 最新配置
 cd /d %~dp0
-..\..\wget -t 2 --no-check-certificate https://www.gitlabip.xyz/Alvin9999/pac2/master/xray/3/config.json
+..\..\wget -t 2 --no-check-certificate https://www.gitlabip.xyz/Alvin9999/PAC/master/backup/img/1/2/ipp/xray/3/config.json
 
 if exist config.json goto startcopy
 
-..\..\wget -t 2  --no-check-certificate https://gitlab.com/free9999/ipupdate/-/raw/master/xray/2/config.json
-
+..\..\wget -t 2  --no-check-certificate https://gitlab.com/free9999/ipupdate/-/raw/master/backup/img/1/2/ipp/xray/3/config.json
 if exist config.json goto startcopy
 
 

@@ -1,15 +1,16 @@
-use futures::stream::{self, StreamExt};
+use futures::stream::{ self, StreamExt };
 use hashbrown::HashSet as hashbrownHashset;
 use regex::Regex;
 use reqwest::Client;
 use serde_json::Value as JsonValue;
 use serde_yaml::Value as YamlValue;
-use std::collections::hash_map::DefaultHasher;
-use std::collections::{HashMap, HashSet};
-use std::fs::{self, File};
-use std::hash::{Hash, Hasher};
-use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
+use std::{
+    collections::{ hash_map::DefaultHasher, HashMap, HashSet },
+    fs::{ self, File },
+    hash::{ Hash, Hasher },
+    io::{ BufRead, BufReader },
+    path::{ Path, PathBuf },
+};
 
 #[tokio::main]
 async fn main() {
@@ -32,10 +33,7 @@ fn get_urls() -> Vec<String> {
     for file in bat_files {
         if let Some(first_folder) = get_first_folder(&current_dir, &file) {
             let urls = extract_urls(&file).unwrap();
-            url_map
-                .entry(first_folder)
-                .or_insert_with(HashSet::new)
-                .extend(urls);
+            url_map.entry(first_folder).or_insert_with(HashSet::new).extend(urls);
         }
     }
     let mut all_url: Vec<String> = Vec::new();
@@ -80,7 +78,9 @@ fn extract_urls(file_path: &Path) -> std::io::Result<HashSet<String>> {
                     urls.insert(url.as_str().to_string());
                 }
             }
-            Err(_) => continue, // 跳过无法读取的行
+            Err(_) => {
+                continue; // 跳过无法读取的行
+            }
         }
     }
 
@@ -101,29 +101,33 @@ fn get_first_folder(base_dir: &Path, file_path: &Path) -> Option<String> {
 async fn extract_unique_urls(urls: Vec<String>) -> HashMap<String, Vec<String>> {
     let client = Client::new();
 
-    let fetches = stream::iter(urls.into_iter().map(|url| {
-        let client = client.clone();
-        async move {
-            match client.get(url.clone()).send().await {
-                Ok(response) => match response.text().await {
-                    Ok(text) => Some((url, text)),
-                    Err(_) => None,
-                },
-                Err(_) => None,
-            }
-        }
-    }))
-    .buffer_unordered(10) // 并发执行的任务数量
-    .collect::<Vec<_>>()
-    .await;
+    let fetches = stream
+        ::iter(
+            urls.into_iter().map(|url| {
+                let client = client.clone();
+                async move {
+                    match client.get(url.clone()).send().await {
+                        Ok(response) =>
+                            match response.text().await {
+                                Ok(text) => Some((url, text)),
+                                Err(_) => None,
+                            }
+                        Err(_) => None,
+                    }
+                }
+            })
+        )
+        .buffer_unordered(10) // 并发执行的任务数量
+        .collect::<Vec<_>>().await;
 
     let mut json_set = hashbrownHashset::new();
     let mut yaml_set = hashbrownHashset::new();
     let mut url_map: HashMap<String, Vec<String>> = HashMap::new();
     for fetch in fetches {
         if let Some((url, content)) = fetch {
-            if content.trim().is_empty()
-                || content.contains("Package size exceeded the configured limit of 50 MB")
+            if
+                content.trim().is_empty() ||
+                content.contains("Package size exceeded the configured limit of 50 MB")
             {
                 continue; // Skip empty content or package size exceeded
             }

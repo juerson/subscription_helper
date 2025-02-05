@@ -1,13 +1,14 @@
-use futures::stream::{self, StreamExt};
+use futures::stream::{ self, StreamExt };
 use hashbrown::HashSet;
 use reqwest::Client;
 use serde_json::Value as JsonValue;
 use serde_yaml::Value as YamlValue;
-use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
-use std::fs::File;
-use std::hash::{Hash, Hasher};
-use std::io::Read;
+use std::{
+    collections::{ hash_map::DefaultHasher, HashMap },
+    fs::File,
+    hash::{ Hash, Hasher },
+    io::Read,
+};
 
 #[tokio::main]
 async fn main() {
@@ -24,8 +25,7 @@ fn read_json_file(file: &str) -> Vec<String> {
     // 打开文件并读取内容
     let mut file = File::open(file).expect("无法打开文件");
     let mut json_data = String::new();
-    file.read_to_string(&mut json_data)
-        .expect("无法读取文件内容");
+    file.read_to_string(&mut json_data).expect("无法读取文件内容");
 
     // 解析 JSON 数据为 Vec<String>
     let parsed_data: Vec<String> = serde_json::from_str(&json_data).expect("无法解析 JSON 数据");
@@ -37,31 +37,35 @@ fn read_json_file(file: &str) -> Vec<String> {
 async fn extract_unique_urls(urls: Vec<String>) -> HashMap<String, Vec<String>> {
     let client = Client::new();
 
-    let fetches = stream::iter(urls.into_iter().map(|url| {
-        let client = client.clone();
-        async move {
-            match client.get(url.clone()).send().await {
-                Ok(response) => match response.text().await {
-                    Ok(text) => Some((url, text)),
-                    Err(_) => None,
-                },
-                Err(_) => None,
-            }
-        }
-    }))
-    .buffer_unordered(10) // 并发执行的任务数量
-    .collect::<Vec<_>>()
-    .await;
+    let fetches = stream
+        ::iter(
+            urls.into_iter().map(|url| {
+                let client = client.clone();
+                async move {
+                    match client.get(url.clone()).send().await {
+                        Ok(response) =>
+                            match response.text().await {
+                                Ok(text) => Some((url, text)),
+                                Err(_) => None,
+                            }
+                        Err(_) => None,
+                    }
+                }
+            })
+        )
+        .buffer_unordered(10) // 并发执行的任务数量
+        .collect::<Vec<_>>().await;
 
     let mut json_set = HashSet::new();
     let mut yaml_set = HashSet::new();
     let mut url_map: HashMap<String, Vec<String>> = HashMap::new();
     for fetch in fetches {
         if let Some((url, content)) = fetch {
-            if content.trim().is_empty()
-                || content.contains("Package size exceeded the configured limit of 50 MB")
+            if
+                content.trim().is_empty() ||
+                content.contains("Package size exceeded the configured limit of 50 MB")
             {
-                continue; // Skip empty content or package size exceeded
+                continue;
             }
             if let Ok(json_value) = serde_json::from_str::<JsonValue>(&content) {
                 let json_string = serde_json::to_string(&json_value).unwrap();
